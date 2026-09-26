@@ -1,0 +1,54 @@
+{
+  "id": "at.beispiel.probe",
+  "name": {
+    "de": "Probe",
+    "en": "Probe"
+  },
+  "description": {
+    "de": "Nur zur Probe – nicht zusammenführen.",
+    "en": "A dry run – do not merge."
+  },
+  "version": "1.2.0",
+  "famhubApi": "1.3",
+  "publisher": {
+    "name": "Beispiel"
+  },
+  "needs": {
+    "permissions": [],
+    "network": [],
+    "storageMb": 5,
+    "jobs": false
+  },
+  "provides": {
+    "permissions": {},
+    "nav": [
+      {
+        "key": "tally",
+        "icon": "Tally5",
+        "title": {
+          "de": "Strichliste",
+          "en": "Tally"
+        },
+        "screen": "list"
+      }
+    ],
+    "entities": [],
+    "screens": "screens.json",
+    "tile": {
+      "title": {
+        "de": "Strichliste",
+        "en": "Tally"
+      },
+      "icon": "Tally5",
+      "source": {
+        "path": "striche"
+      },
+      "value": "$.n",
+      "hint": "$.name",
+      "screen": "list"
+    }
+  },
+  "runtime": "wasm",
+  "entry": "plugin.wasm",
+  "migrations": "migrations"
+}

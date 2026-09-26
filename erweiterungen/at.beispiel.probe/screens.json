@@ -1,0 +1,28 @@
+[
+  {
+    "key": "list",
+    "title": { "de": "Strichliste", "en": "Tally" },
+    "content": [
+      {
+        "block": "button",
+        "id": "strich",
+        "label": { "de": "Strich machen", "en": "Add a mark" },
+        "call": { "path": "strich", "method": "POST", "toast": { "de": "Notiert", "en": "Noted" } }
+      },
+      {
+        "block": "list",
+        "id": "tage",
+        "source": { "path": "striche" },
+        "row": { "title": "$.name", "badge": "$.n" },
+        "empty": { "de": "Noch kein Strich", "en": "No marks yet" }
+      },
+      {
+        "block": "text",
+        "text": {
+          "de": "Diese Erweiterung läuft im Sandkasten: kein Dateisystem, kein Netz, keine fremde Tabelle – und jeder Aufruf hat eine Zeit- und eine Speichergrenze.",
+          "en": "This extension runs in the sandbox: no file system, no network, no foreign table – and every call has a time and a memory limit."
+        }
+      }
+    ]
+  }
+]
