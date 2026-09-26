@@ -1,0 +1,48 @@
+# Was eingereicht wird, wird gebaut und geprüft — bevor ein Mensch hineinschaut.
+#
+# Kein Schlüssel ist hier im Spiel: Unterschrieben wird später, von Hand, auf dem Rechner, der den
+# Gemeinschaftsschlüssel hat. Diese Prüfung stellt nur fest, ob das Paket überhaupt in Frage kommt.
+name: Prüfen
+
+on:
+  pull_request:
+    paths: ['erweiterungen/**']
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Geänderte Erweiterungen finden
+        id: ordner
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          dirs=$(git diff --name-only "$base" HEAD -- 'erweiterungen/*' | cut -d/ -f1,2 | sort -u)
+          if [ -z "$dirs" ]; then echo "nichts zu prüfen"; fi
+          {
+            echo "dirs<<ENDE"
+            echo "$dirs"
+            echo "ENDE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bauen, prüfen, Aufnahmeregeln
+        if: steps.ordner.outputs.dirs != ''
+        run: |
+          set -e
+          for d in ${{ steps.ordner.outputs.dirs }}; do
+            [ -d "$d" ] || { echo "== $d (entfernt, übersprungen)"; continue; }
+            echo "== $d"
+            # aus dem Quelltext bauen – genau das tut lokalkraft später auch
+            npx -y -p create-famhub-plugin famhub-plugin bauen "$d"
+            npx -y -p create-famhub-plugin famhub-plugin prüfen "$d"
+            node .github/regeln.mjs "$d"
+            # das eben Gebaute gehört nicht in den Pull Request
+            git checkout -- "$d" 2>/dev/null || true
+            rm -f "$d"/*.wasm
+          done
