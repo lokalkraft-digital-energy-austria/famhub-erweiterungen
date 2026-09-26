@@ -8,6 +8,7 @@
  *
  *     node .github/regeln.mjs erweiterungen/at.beispiel.garten
  */
+import { execFileSync } from 'node:child_process';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -29,16 +30,35 @@ if (!manifest) {
 // 1 · Sandkasten. Ohne ihn kommt nichts in ein Regal, das mit der App ausgeliefert wird.
 if ((manifest.runtime ?? 'wasm') !== 'wasm') fehler.push('runtime muss "wasm" sein – ohne Sandkasten nehmen wir nichts auf');
 
-// 2 · Kein gebautes Artefakt. Gebaut wird aus dem Quelltext – nur so bedeutet die Unterschrift etwas.
-const alle = [];
-const walk = async (d) => {
-  for (const e of await readdir(d, { withFileTypes: true })) {
-    const p = path.join(d, e.name);
-    if (e.isDirectory()) await walk(p);
-    else alle.push(path.relative(dir, p));
+/*
+ * Beurteilt wird, was **eingecheckt** ist — nicht, was auf der Platte liegt.
+ *
+ * Die Prüfung baut das Paket ja gerade erst aus dem Quelltext; danach liegt ein `plugin.wasm` im
+ * Ordner, das niemand eingereicht hat. Fragte man die Festplatte, widerspräche sich die Regel
+ * selbst. `git ls-files` sagt, was wirklich im Repo steht.
+ */
+const alle = await dateienImRepo(dir);
+
+async function dateienImRepo(d) {
+  try {
+    // stderr verschlucken: außerhalb eines Repos sagt git „fatal: … is outside repository“, und das ist hier kein Fehler
+    const out = execFileSync('git', ['ls-files', '-z', '--', d], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const liste = out.split('\0').filter(Boolean).map((f) => path.relative(d, f));
+    if (liste.length) return liste;
+  } catch {
+    /* kein Repo – dann eben die Platte (so läuft es lokal vor dem ersten Commit) */
   }
-};
-await walk(dir);
+  const gefunden = [];
+  const walk = async (x) => {
+    for (const e of await readdir(x, { withFileTypes: true })) {
+      const p = path.join(x, e.name);
+      if (e.isDirectory()) await walk(p);
+      else gefunden.push(path.relative(d, p));
+    }
+  };
+  await walk(d);
+  return gefunden;
+}
 const gebaut = alle.filter((f) => /\.(wasm|zip|tgz|so|dylib|exe)$/i.test(f));
 if (gebaut.length) fehler.push(`gebaute Dateien gehören nicht ins Repo: ${gebaut.join(', ')}`);
 

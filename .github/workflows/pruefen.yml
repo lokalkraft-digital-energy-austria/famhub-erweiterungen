@@ -41,8 +41,6 @@ jobs:
             # aus dem Quelltext bauen – genau das tut lokalkraft später auch
             npx -y -p create-famhub-plugin famhub-plugin bauen "$d"
             npx -y -p create-famhub-plugin famhub-plugin prüfen "$d"
+            # die Regeln fragen `git ls-files` – das eben Gebaute stört sie deshalb nicht
             node .github/regeln.mjs "$d"
-            # das eben Gebaute gehört nicht in den Pull Request
-            git checkout -- "$d" 2>/dev/null || true
-            rm -f "$d"/*.wasm
           done
