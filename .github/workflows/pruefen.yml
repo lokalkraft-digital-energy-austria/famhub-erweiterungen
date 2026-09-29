@@ -31,6 +31,25 @@ jobs:
             echo "ENDE"
           } >> "$GITHUB_OUTPUT"
 
+      # Pakete in TypeScript baut extism-js (braucht binaryen) – feste Fassungen, mit Prüfsumme
+      - name: Übersetzer für TypeScript
+        if: steps.ordner.outputs.dirs != ''
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/tools" && cd "$RUNNER_TEMP/tools"
+          curl -sSLO https://github.com/extism/js-pdk/releases/download/v1.7.0/extism-js-x86_64-linux-v1.7.0.gz
+          curl -sSLO https://github.com/extism/js-pdk/releases/download/v1.7.0/extism-js-x86_64-linux-v1.7.0.gz.sha256
+          curl -sSLO https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz
+          curl -sSLO https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz.sha256
+          # die .sha256 von extism-js enthält nur den Hash, die von binaryen Hash und Name – beides gleich prüfen
+          for f in extism-js-x86_64-linux-v1.7.0.gz binaryen-version_133-x86_64-linux.tar.gz; do
+            echo "$(cut -d' ' -f1 "$f.sha256")  $f" | sha256sum -c -
+          done
+          gunzip -c extism-js-x86_64-linux-v1.7.0.gz > extism-js && chmod +x extism-js
+          tar xzf binaryen-version_133-x86_64-linux.tar.gz
+          echo "EXTISM_JS=$RUNNER_TEMP/tools/extism-js" >> "$GITHUB_ENV"
+          echo "BINARYEN_BIN=$RUNNER_TEMP/tools/binaryen-version_133/bin" >> "$GITHUB_ENV"
+
       - name: Bauen, prüfen, Aufnahmeregeln
         if: steps.ordner.outputs.dirs != ''
         run: |
