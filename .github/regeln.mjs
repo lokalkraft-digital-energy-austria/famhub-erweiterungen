@@ -91,6 +91,7 @@ if (needs.network?.length) hinweise.push(`will ins Netz: ${needs.network.join(',
 if (needs.permissions?.length) hinweise.push(`will Kernrechte: ${needs.permissions.join(', ')} – bitte im Pull Request begründen`);
 if (needs.jobs) hinweise.push('will regelmäßig etwas tun – bitte im Pull Request begründen');
 if ((needs.network ?? []).some((n) => String(n).startsWith('geraet:'))) hinweise.push('spricht Geräte im Heimnetz an (geraet:) – die Adresse trägt der Betreiber ein; im Pull Request sagen, welche Geräte gemeint sind');
+if ((needs.network ?? []).some((n) => /^geraet:[^:]+:schalten$/.test(String(n)))) hinweise.push('will Geräte SCHALTEN (geraet:…:schalten) – im Pull Request genau begründen, was wann geschaltet wird');
 // eigene Tabellen sind erlaubt, aber für neue Pakete nicht der Normalfall: jede Abfrage muss household_id selbst nennen
 if (manifest.migrations) hinweise.push('bringt eigene Tabellen mit (migrations) – jede Abfrage muss household_id nennen; der getippte Speicher (store.collection) nimmt das ab');
 if (manifest.provides?.tools?.length) hinweise.push(`gibt dem Assistenten Werkzeuge: ${manifest.provides.tools.map((t) => t.name + (t.write ? ' (ändert Daten)' : '')).join(', ')}`);
